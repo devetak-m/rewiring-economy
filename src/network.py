@@ -68,7 +68,7 @@ def plot_connectivity_network(W):
     for i in range(W.shape[0]):
         for j in range(W.shape[1]):
             if W[i, j] != 0:
-                G.add_edge(j,i)
+                G.add_edge(i,j)
     nx.draw(G, with_labels=True)
     plt.draw()
     plt.show()
