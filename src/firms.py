@@ -352,4 +352,9 @@ class Firms():
             ex_all[j] = self.x[j]
         return ex_all
     
+    def compute_household_utility(self):
+        # compute household utility
+        # - sum_j log(p_j)
+        return -np.sum(np.log(self.p))
+    
         

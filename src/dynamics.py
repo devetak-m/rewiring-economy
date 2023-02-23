@@ -2,7 +2,7 @@ import numpy as np
 
 class Dynamics:
 
-    def __init__(self, firms, tmax):
+    def __init__(self, firms, rmax):
         # an instance of the Firms class on which the dynamics is computed
         self.firms = firms
 
@@ -10,17 +10,24 @@ class Dynamics:
         self.n_firms = len(firms.a)
 
         # maximum number of rounds
-        self.tmax = tmax
+        self.rmax = rmax
 
         # current round
         self.r = 0
 
+        # current time
+        self.t = 0
+
         # initialize time series
-        self.P_series = np.zeros((self.tmax * self.n_firms, self.n_firms))
-        self.p_series = np.zeros((self.tmax * self.n_firms, self.n_firms))
-        self.x_series = np.zeros((self.tmax * self.n_firms, self.n_firms))
-        self.l_series = np.zeros((self.tmax * self.n_firms, self.n_firms))
-        self.h_series = np.zeros((self.tmax * self.n_firms, 1))
+        self.P_series = np.zeros((self.rmax * self.n_firms, self.n_firms))
+        self.p_series = np.zeros((self.rmax * self.n_firms, self.n_firms))
+        self.x_series = np.zeros((self.rmax * self.n_firms, self.n_firms))
+        self.l_series = np.zeros((self.rmax * self.n_firms, self.n_firms))
+        self.h_series = np.zeros((self.rmax * self.n_firms, 1))
+        self.household_utility = np.zeros((self.rmax * self.n_firms, 1))
+
+        # initialize observables
+        self.rewiring_occourences_series = - np.ones((self.rmax * self.n_firms, self.n_firms))
 
     def compute_possible_rewirings(self, i):
         """ Compute possible rewirings for firm i in the network.
@@ -47,9 +54,10 @@ class Dynamics:
         """ Compute one round of the dynamics.
          return a flag that is True if the network has changed and False otherwise """
 
-
         # create flag
         network_changed = False
+        # update the time
+        self.t = 0
 
         # create a list of firms to be updated
         firms_to_update = list(range(self.n_firms))
@@ -82,6 +90,7 @@ class Dynamics:
                     current_profit = expected_profits
                     current_rewiring = rewiring
                     network_changed = True
+                    self.rewiring_occourences_series[self.r*self.n_firms + self.t, :] = i
                 # revert the network matrix
                 current_W[old_supplier,i] = capacity_old_supplier
                 current_W[new_supplier,i] = 0
@@ -93,7 +102,35 @@ class Dynamics:
             # update the firms economy
             self.firms.update_equilibrium()
 
+            # update the time series
+            self.P_series[self.r*self.n_firms + self.t,:] = self.firms.P
+            self.p_series[self.r*self.n_firms + self.t,:] = self.firms.p
+            self.x_series[self.r*self.n_firms + self.t,:] = self.firms.x
+            self.l_series[self.r*self.n_firms + self.t,:] = self.firms.l
+            self.h_series[self.r*self.n_firms + self.t,:] = self.firms.h
+            self.household_utility[self.r*self.n_firms + self.t,:] = self.firms.compute_household_utility()
+
+            # update the time
+            self.t += 1
+        
+
+        # update the round
+        self.r += 1
+
         return network_changed
+    
+    def compute_dynamics(self):
+        """ Compute the dynamics until the network is stable """
+
+        # create flag
+        network_changed = True
+
+        # loop over rounds
+        while network_changed and self.r < self.rmax:
+            network_changed = self.compute_round()
+    
+    
+
     
 
 
