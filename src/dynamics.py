@@ -2,7 +2,7 @@ import numpy as np
 
 class Dynamics:
 
-    def __init__(self, firms, rmax):
+    def __init__(self, firms, rmax, stiffness = 1):
         # an instance of the Firms class on which the dynamics is computed
         self.firms = firms
 
@@ -10,6 +10,10 @@ class Dynamics:
         self.n_firms = len(firms.a)
 
         # maximum number of rounds
+
+        # stiffness parameter
+        self.stiffness = stiffness
+
         self.rmax = rmax
 
         # current round
@@ -86,7 +90,7 @@ class Dynamics:
                 # compute expected profits
                 expected_profits = self.firms.compute_expected_profits(i, current_W)
                 # if the expected profit is higher than the current one, update
-                if expected_profits > current_profit:
+                if self.stiffness * expected_profits > current_profit:
                     current_profit = expected_profits
                     current_rewiring = rewiring
                     network_changed = True

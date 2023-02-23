@@ -109,7 +109,6 @@ class TestDynamics(unittest.TestCase):
             for j in range(T.shape[1]):
                 self.assertAlmostEqual(T[i,j], firms.T[i,j])
     
-
 if __name__ == '__main__':
     unittest.TestLoader.sortTestMethodsUsing = None
     unittest.main()
