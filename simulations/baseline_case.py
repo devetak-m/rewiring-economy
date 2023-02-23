@@ -5,6 +5,9 @@ from dynamics import Dynamics
 from network import *
 import numpy as np
 
+# fix random seed of numpy
+np.random.seed(33)
+
 # set up firms
 n_firms = 10
 n_periods = 100
@@ -36,3 +39,19 @@ dynamics.compute_dynamics()
 
 # plot network
 plot_connectivity_network(dynamics.firms.W)
+
+# get which was the final round
+final_round = dynamics.r
+
+# plot the evolution of household utility
+household_utility = dynamics.household_utility[:final_round * n_firms]
+plt.plot(household_utility)
+plt.show()
+
+# rewiring series
+rewiring_series = dynamics.rewiring_occourences_series[:final_round * n_firms]
+
+# count the elements that are not -1
+n_rewirings = np.count_nonzero(rewiring_series != -1)
+
+print(f"Number of rewirings: {n_rewirings}")

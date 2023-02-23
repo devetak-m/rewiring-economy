@@ -27,7 +27,7 @@ class Dynamics:
         self.household_utility = np.zeros((self.rmax * self.n_firms, 1))
 
         # initialize observables
-        self.rewiring_occourences_series = - np.ones((self.rmax * self.n_firms, self.n_firms))
+        self.rewiring_occourences_series = - np.ones((self.rmax * self.n_firms, 1))
 
     def compute_possible_rewirings(self, i):
         """ Compute possible rewirings for firm i in the network.
