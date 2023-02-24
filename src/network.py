@@ -58,7 +58,7 @@ def generate_connectivity_matrix(T, c):
         W[ind, j] = T[ind, j]
     return W
 
-def plot_connectivity_network(W):
+def plot_connectivity_network(W, save_path=None):
     """
     Plots the network of connectivity matrix W.
     :param W: Connectivity matrix.
@@ -71,8 +71,67 @@ def plot_connectivity_network(W):
                 G.add_edge(i,j)
     nx.draw(G, with_labels=True)
     plt.draw()
-    plt.show()
+    if save_path is not None:
+        plt.savefig(save_path)
+        # clear the figure
+        plt.clf()
+    else:
+        plt.show()
     return None
+
+
+# given a connectivity matrix W compute the out weight of each node
+# (w_out)_i = sum_j W_ij
+def compute_out_weight(W):
+    w_out = np.sum(W, axis=1)
+    return w_out
+
+# given a connectivity matrix W compute the in weight of each node
+# (w_in)_i = sum_j W_ji
+def compute_in_weight(W):
+    w_in = np.sum(W, axis=0)
+    return w_in
+
+# given a connectivity matrix W compute the total weight of each node compute the graph laplacian defined as:
+# L = diag(total_weight) - W - W^T
+def compute_laplacian(W, total_weight):
+    L = np.diag(total_weight) - W - W.T
+    return L
+
+# given a graph laplacian L and the imbalance of each node
+# compute the least squares solution of the linear system Lx = imbalance
+# and normalize so that the smallest entry in x is 0
+def compute_trophic_level(laplacian, imbalance):
+    x = np.linalg.lstsq(laplacian, imbalance, rcond=None)[0]
+    x = x - np.min(x)
+    return x
+
+# given a connectivity matrix W and the trophic level of each node
+# compute the trophic incoherence defined as:
+# sum_i sum_j W_ij (h_j - h_i - 1)^2 / sum_i sum_j W_ij
+def compute_trophic_incoherence_from_level(W, trophic_level):
+    n = W.shape[0]
+    trophic_incoherence = 0
+    for i in range(n):
+        for j in range(n):
+            if W[i, j] != 0:
+                trophic_incoherence += W[i, j] * (trophic_level[j] - trophic_level[i] - 1) ** 2
+    trophic_incoherence = trophic_incoherence / np.sum(W)
+    return trophic_incoherence
+
+# given a connectivity matrix W compute trophic incoherence
+def compute_trophic_incoherence(W):
+    in_weight = compute_in_weight(W)
+    out_weight = compute_out_weight(W)
+    total_weight = in_weight + out_weight
+    laplacian = compute_laplacian(W, total_weight)
+    imbalance = in_weight - out_weight
+    trophic_level = compute_trophic_level(laplacian, imbalance)
+    trophic_incoherence = compute_trophic_incoherence_from_level(W, trophic_level)
+    return trophic_incoherence
+
+
+
 
 
 

@@ -83,6 +83,41 @@ class TestNetwork(unittest.TestCase):
         for j in range(n_firms):
             self.assertAlmostEqual(W[j, j], 0)
 
+    def test_3_compute_trophic_level(self):
+
+        W = np.array([[1, 0, 1, 0],
+                    [0, 0.5, 0, 0.5],
+                    [1,0,0,0],
+                    [1, 0.5, 0, 1]])
+    
+        expected_in_weight = np.array([3, 1, 1, 1.5])
+        expected_out_weight = np.array([2, 1, 1, 2.5])
+        computed_out_weight = compute_out_weight(W)
+        computed_in_weight = compute_in_weight(W)
+        for i in range(4):
+            self.assertAlmostEqual(expected_out_weight[i], computed_out_weight[i])
+            self.assertAlmostEqual(expected_in_weight[i], computed_in_weight[i])
+    
+        expected_laplacian = np.array([[3, 0, -2, -1],
+                                       [0, 1, 0, -1],
+                                       [-2, 0, 2, 0],
+                                       [-1, -1, 0, 2]])
+        computed_laplacian = compute_laplacian(W, expected_out_weight + expected_in_weight)
+        for i in range(4):
+            for j in range(4):
+                self.assertAlmostEqual(expected_laplacian[i, j], computed_laplacian[i, j])
+    
+        expected_trophic_level = np.array([1, 0, 1, 0])
+        computed_trophic_level = compute_trophic_level(expected_laplacian, expected_in_weight - expected_out_weight)
+        for i in range(4):
+            self.assertAlmostEqual(expected_trophic_level[i], computed_trophic_level[i])
+    
+        expected_trophic_incoherence = 5.5/6.5
+        computed_trophic_incoherence = compute_trophic_incoherence_from_level(W, computed_trophic_level)
+        self.assertAlmostEqual(expected_trophic_incoherence, computed_trophic_incoherence)
+
+        compute_trophic_incoherence_2  = compute_trophic_incoherence(W)
+        self.assertAlmostEqual(expected_trophic_incoherence, compute_trophic_incoherence_2)
 
 if __name__ == '__main__':
     unittest.TestLoader.sortTestMethodsUsing = None

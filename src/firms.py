@@ -1,4 +1,6 @@
 import numpy as np
+import network as net
+
 
 class Firms():
 
@@ -189,7 +191,7 @@ class Firms():
             # update W
             self.update_W(W_new)
             # compute profits
-            P, p, x, l, h  = self.compute_equilibrium_profits()
+            P, p, x, l, h  = self.compute_equilibrium()
             # W = W again
             self.update_W(W)
             return P[i]
@@ -356,5 +358,8 @@ class Firms():
         # compute household utility
         # - sum_j log(p_j)
         return -np.sum(np.log(self.p))
+    
+    def compute_trophic_incoherence(self):
+        return net.compute_trophic_incoherence(self.W)
     
         

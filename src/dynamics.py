@@ -29,6 +29,7 @@ class Dynamics:
         self.l_series = np.zeros((self.rmax * self.n_firms, self.n_firms))
         self.h_series = np.zeros((self.rmax * self.n_firms, 1))
         self.household_utility = np.zeros((self.rmax * self.n_firms, 1))
+        self.trophic_incoherence_series = np.zeros((self.rmax * self.n_firms, 1))
 
         # initialize observables
         self.rewiring_occourences_series = - np.ones((self.rmax * self.n_firms, 1))
@@ -113,6 +114,7 @@ class Dynamics:
             self.l_series[self.r*self.n_firms + self.t,:] = self.firms.l
             self.h_series[self.r*self.n_firms + self.t,:] = self.firms.h
             self.household_utility[self.r*self.n_firms + self.t,:] = self.firms.compute_household_utility()
+            self.trophic_incoherence_series[self.r*self.n_firms + self.t,:] = self.firms.compute_trophic_incoherence()
 
             # update the time
             self.t += 1

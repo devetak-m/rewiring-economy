@@ -9,15 +9,15 @@ import numpy as np
 np.random.seed(33)
 
 # set up firms
-n_firms = 10
+n_firms = 20
 n_periods = 100
 a = np.ones(n_firms) * 0.5
 b = np.ones(n_firms) * 0.9
 z = np.ones(n_firms)
-tau = np.zeros(n_firms)
+tau = - np.ones(n_firms)
 
-c = 1
-c_prime = 1
+c = 2
+c_prime = 4
 
 # generaet technology matrix
 T = generate_base_case_tech_matrix(n_firms, c + c_prime, 1/c)
@@ -32,7 +32,7 @@ plot_connectivity_network(W)
 firms = Firms(a, z, b, tau, W, T)
 
 # set up dynamics
-dynamics = Dynamics(firms, n_periods, stiffness = 0.9999)
+dynamics = Dynamics(firms, n_periods, stiffness = 1)
 
 # run simulation
 dynamics.compute_dynamics()
@@ -55,3 +55,29 @@ rewiring_series = dynamics.rewiring_occourences_series[:final_round * n_firms]
 n_rewirings = np.count_nonzero(rewiring_series != -1)
 
 print(f"Number of rewirings: {n_rewirings}")
+
+if dynamics.r < dynamics.rmax:
+    print("Simulation stopped due to equilibrium")
+else:
+    print("Simulation stopped due to the end of the simulation period")
+
+# profit series
+profit_series = dynamics.P_series[:final_round * n_firms]
+
+# get the profits of firm 0, 9 and 12
+firm_0 = profit_series[:,0]
+firm_9 = profit_series[:,9]
+firm_12 = profit_series[:,12]
+
+# plot the profits of firm 0, 9 and 12
+plt.plot(firm_0, label = "firm 0")
+plt.plot(firm_9, label = "firm 9")
+plt.plot(firm_12, label = "firm 12")
+plt.legend()
+plt.show()
+
+# plot the evolution of trophic incoherence
+trophic_incoherence_series = dynamics.trophic_incoherence_series[:final_round * n_firms]
+plt.plot(trophic_incoherence_series)
+plt.show()
+
