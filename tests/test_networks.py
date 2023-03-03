@@ -118,6 +118,38 @@ class TestNetwork(unittest.TestCase):
 
         compute_trophic_incoherence_2  = compute_trophic_incoherence(W)
         self.assertAlmostEqual(expected_trophic_incoherence, compute_trophic_incoherence_2)
+    
+    def test_4_communities(self):
+
+        n_firms = 30
+        n_communities = 3
+        c = 4
+        c_prime = 8
+        
+        W,T = generate_communities_supply(n_firms, n_communities, c)
+
+        # check that there are exactly c + c_prime nonzero elements in each column of T
+        for j in range(n_firms):
+            self.assertEqual(np.count_nonzero(T[:, j]), c + c_prime)
+        
+        # check that there are exactly c nonzero elements in each column of W
+        for j in range(n_firms):
+            self.assertEqual(np.count_nonzero(W[:, j]), c)
+        
+        # check that the columns of W sum to 1
+        for j in range(n_firms):
+            self.assertAlmostEqual(np.sum(W[:, j]), 1)
+        
+        # check that the diagonal of W is zero
+        for j in range(n_firms):
+            self.assertAlmostEqual(W[j, j], 0)
+        
+        # generate a undirected network from W
+        G = nx.from_numpy_array(W)
+
+        # check that the number of communities is n_communities
+        communities = list(nx.algorithms.community.greedy_modularity_communities(G))
+        self.assertEqual(len(communities), n_communities)
 
 if __name__ == '__main__':
     unittest.TestLoader.sortTestMethodsUsing = None

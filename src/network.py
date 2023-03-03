@@ -130,6 +130,32 @@ def compute_trophic_incoherence(W):
     trophic_incoherence = compute_trophic_incoherence_from_level(W, trophic_level)
     return trophic_incoherence
 
+def generate_communities_supply(n_firms, n_communities, c):
+    """
+    Generates a connectivity matrix with communities.
+    :param n_firms: number of firms.
+    :param n_communities: number of communities.
+    :param c: connectivity parameter.
+    :return: Connectivity matrix.
+    """
+
+    if n_firms % n_communities != 0:
+        raise ValueError('n_firms must be a multiple of n_communities')
+    
+    firms_per_community = n_firms // n_communities
+
+    W = np.zeros((n_firms, n_firms))
+    T = np.zeros((n_firms, n_firms))
+
+    for i in range(n_communities):
+        for j in range(n_communities):
+            T[i * firms_per_community:(i + 1) * firms_per_community, j * firms_per_community:(j + 1) * firms_per_community] = generate_base_case_tech_matrix(firms_per_community, c, 1/c)
+    
+    # generate connectivity matrix where each community is connected only to itself
+    for i in range(n_communities):
+        W[i*firms_per_community:(i+1)*firms_per_community, i*firms_per_community:(i+1)*firms_per_community] = T[i*firms_per_community:(i+1)*firms_per_community, i*firms_per_community:(i+1)*firms_per_community]
+    
+    return W, T
 
 
 

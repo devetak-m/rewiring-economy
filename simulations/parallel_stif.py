@@ -32,6 +32,9 @@ def run_simulation(parameters):
     b = np.ones(n_firms) * 0.9
     z = np.ones(n_firms)
     tau = np.ones(n_firms) * tau
+    # typecase tau to int
+    tau = tau.astype(int)
+    
 
     T = generate_base_case_tech_matrix(n_firms, n_supplier + n_potential_supplier, 1/n_supplier)
     W = generate_connectivity_matrix(T, n_supplier)
@@ -83,27 +86,27 @@ def run_simulation(parameters):
 if __name__ == '__main__':
     # Define the parameters
     
-    # # network sizes
-    # n_firms = [10, 50, 100, 200]
-    # # number of suppliers
-    # n_suppliers = [2, 4, 6]
-    # # number of potential suppliers
-    # n_potential_suppliers = [2, 4, 6]
-    # # foresight of firms
-    # taus = [-1, 0, 1, 2]
-    # # stiffness of the network
-    # stiffness = [0.8, 0.90, 0.95, 0.99, 1]
-
-    # make a small test
-    n_firms = [10]
+    # network sizes
+    n_firms = [10, 50, 100, 200]
     # number of suppliers
-    n_suppliers = [2]
+    n_suppliers = [2, 4, 6]
     # number of potential suppliers
-    n_potential_suppliers = [2]
+    n_potential_suppliers = [2, 4, 6]
     # foresight of firms
-    taus = [-1]
+    taus = [-1, 0, 1, 2]
     # stiffness of the network
-    stiffness = [1]
+    stiffness = [0.8, 0.90, 0.95, 0.99, 1]
+
+    # # make a small test
+    # n_firms = [10]
+    # # number of suppliers
+    # n_suppliers = [2]
+    # # number of potential suppliers
+    # n_potential_suppliers = [2]
+    # # foresight of firms
+    # taus = [-1]
+    # # stiffness of the network
+    # stiffness = [1]
 
     # create the list of parameters
     all_parameters = []
