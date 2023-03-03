@@ -157,7 +157,38 @@ def generate_communities_supply(n_firms, n_communities, c):
     
     return W, T
 
+def _compute_total_elements_in_partition(U):
+    """
+    Computes the total number of elements in a partition.
+    :param U: Partition.
+    :return: Total number of elements.
+    """
+    total_elements = 0
+    for i in range(len(U)):
+        total_elements += len(U[i])
+    return total_elements
 
+def mutual_information_of_two_partitions(U,V):
+    """
+    Computes the mutual information between two partitions.
+    :param U: Partition 1.
+    :param V: Partition 2.
+    :return: Mutual information.
+    """
+    u_lenght = len(U)
+    v_lenght = len(V)
+
+    total_elements = _compute_total_elements_in_partition(U)
+    mutual_information = 0
+    
+    for i in range(u_lenght):
+        for j in range(v_lenght):
+            P = len(np.intersect1d(U[i], V[j])) / total_elements
+            if P != 0:
+                mutual_information += P*np.log(P / ((len(U[i]) / total_elements) * (len(V[j]) / total_elements)))
+    
+    return mutual_information
+    
 
 
 

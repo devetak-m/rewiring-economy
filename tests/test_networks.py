@@ -151,6 +151,23 @@ class TestNetwork(unittest.TestCase):
         communities = list(nx.algorithms.community.greedy_modularity_communities(G))
         self.assertEqual(len(communities), n_communities)
 
+
+    def test_mutual_information_of_two_partitions(self):
+
+        U = [[1,2,3], [4, 5]]
+        V = [[1, 5], [2,3], [4]]
+
+        mutual_information_computed = mutual_information_of_two_partitions(U, U)
+        self.assertAlmostEqual(0.673011, mutual_information_computed,3)
+
+        mutual_information_expected = 0.39575
+        mutual_information_computed = mutual_information_of_two_partitions(U, V)
+        self.assertAlmostEqual(mutual_information_expected, mutual_information_computed,3)
+
+        mutual_information_computed_2 = mutual_information_of_two_partitions(V, U)
+        self.assertAlmostEqual(mutual_information_expected, mutual_information_computed_2,3)
+
+
 if __name__ == '__main__':
     unittest.TestLoader.sortTestMethodsUsing = None
     unittest.main()
