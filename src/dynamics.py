@@ -2,7 +2,7 @@ import numpy as np
 
 class Dynamics:
 
-    def __init__(self, firms, rmax, stiffness = 1):
+    def __init__(self, firms, rmax, stiffness = 1, verbose=False):
         # an instance of the Firms class on which the dynamics is computed
         self.firms = firms
 
@@ -13,6 +13,7 @@ class Dynamics:
 
         # stiffness parameter
         self.stiffness = stiffness
+        self.verbose = verbose
 
         self.rmax = rmax
 
@@ -133,6 +134,8 @@ class Dynamics:
 
         # loop over rounds
         while network_changed and self.r < self.rmax:
+            if self.r % 99 == 0 and self.verbose:
+                print('Computing round: ', self.r + 1)
             network_changed = self.compute_round()
     
     
