@@ -10,16 +10,16 @@ from networkx.algorithms import community
 np.random.seed(33)
 
 # set up firms
-n_firms = 30
+n_firms = 8
 n_periods = 1000
 a = np.ones(n_firms) * 0.5
 b = np.ones(n_firms) * 0.9
 z = np.ones(n_firms)
 tau = np.zeros(n_firms)
 
-c = 4
-c_prime = 8
-n_communities = 3
+c = 2
+c_prime = 2
+n_communities = 2
 
 W,T = generate_communities_supply(n_firms, n_communities, c)
 
@@ -33,7 +33,7 @@ firms = Firms(a, z, b, tau, W, T)
 dynamics = Dynamics(firms, n_periods, verbose = True)
 
 # compute the initial community
-print(community.greedy_modularity_communities(nx.from_numpy_array(dynamics.firms.W)))
+U = community.greedy_modularity_communities(nx.from_numpy_array(dynamics.firms.W))
 
 # run simulation
 dynamics.compute_dynamics()
@@ -41,7 +41,7 @@ dynamics.compute_dynamics()
 # plot network
 plot_connectivity_network(dynamics.firms.W)
 
-print(community.greedy_modularity_communities(nx.from_numpy_array(dynamics.firms.W)))
+V = community.greedy_modularity_communities(nx.from_numpy_array(dynamics.firms.W))
 
 # get which was the final round
 final_round = dynamics.r
@@ -56,3 +56,7 @@ rewiring_series = dynamics.rewiring_occourences_series[:final_round * n_firms]
 
 # count the elements that are not -1
 n_rewirings = np.count_nonzero(rewiring_series != -1)
+
+# print the mutual information of the partition
+# TODO : this is not working
+print("Mutual information of the partition: ", mutual_information_of_two_partitions(U, V))

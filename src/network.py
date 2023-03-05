@@ -26,36 +26,37 @@ import numpy as np
 
 def generate_base_case_tech_matrix(n_firms, c_tot, value=1):
     """
-    Generates a base case technology matrix according to the parameters c_tot -> number of nonzero entries of each row and
-    each row sums to 1 and diagonal is 0.
+    Generates a base case technology matrix according to the parameters c_tot -> number 
+    of nonzero entries of each row and each row sums to 1 and diagonal is 0.
     :param n_firms: number of firms,
     :param c_tot: number of nonzero entries of each column and each row
     :param value: value of the nonzero entries.
     :return: Technology matrix.
     """
-    T = np.zeros((n_firms, n_firms))
+    technology_matrix = np.zeros((n_firms, n_firms))
     for i in range(n_firms):
         ind = np.random.choice(np.arange(0, n_firms-1), c_tot, replace=False)
         for j in ind:
             if j < i:
-                T[j, i] = value
+                technology_matrix[j, i] = value
             else:
-                T[j+1, i] = value
+                technology_matrix[j+1, i] = value
 
-    return T
+    return technology_matrix
 
-def generate_connectivity_matrix(T, c):
+def generate_connectivity_matrix(technology_matrix, connectivity_parameter):
     """''''
     Generates a connectivity matrix from a technology matrix T and a connectivity parameter c.
-    Randomly selects c non-zero elements of each column as the non-zero elements of the corresponding column of W.
-    :param T: Technology matrix.
-    :param c: Connectivity parameter.
+    Randomly selects c non-zero elements of each column as the non-zero elements 
+    of the corresponding column of W.
+    :param technology_matrix: Technology matrix.
+    :param connectivity_parameter: Connectivity parameter.
     :return: Connectivity matrix.
     """
-    W = np.zeros(T.shape)
-    for j in range(T.shape[1]):
-        ind = np.random.choice(np.nonzero(T[:, j])[0], c, replace=False)
-        W[ind, j] = T[ind, j]
+    W = np.zeros(technology_matrix.shape)
+    for j in range(technology_matrix.shape[1]):
+        ind = np.random.choice(np.nonzero(technology_matrix[:, j])[0], connectivity_parameter, replace=False)
+        W[ind, j] = technology_matrix[ind, j]
     return W
 
 def plot_connectivity_network(W, save_path=None):
@@ -180,7 +181,7 @@ def mutual_information_of_two_partitions(U,V):
 
     total_elements = _compute_total_elements_in_partition(U)
     mutual_information = 0
-    
+
     for i in range(u_lenght):
         for j in range(v_lenght):
             P = len(np.intersect1d(U[i], V[j])) / total_elements
@@ -199,7 +200,7 @@ def mutual_information_of_two_partitions(U,V):
 #     :param n_firms: number of firms,
 #     :param c_tot: number of nonzero entries of each row and each row sums to 1 and diagonal is 0.
 #     :return: Technology matrix.
-#     """
+#     """   
 #     T = np.zeros((n_firms, n_firms))
 #     for i in range(n_firms):
 #         ind = np.random.choice(np.arange(0, n_firms), c_tot, replace=False)
