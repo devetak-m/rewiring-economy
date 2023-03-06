@@ -33,15 +33,15 @@ firms = Firms(a, z, b, tau, W, T)
 dynamics = Dynamics(firms, n_periods, verbose = True)
 
 # compute the initial community
-U = community.greedy_modularity_communities(nx.from_numpy_array(dynamics.firms.W))
+U = community.greedy_modularity_communities(nx.from_numpy_array(dynamics.firms.supply_network))
 
 # run simulation
 dynamics.compute_dynamics()
 
 # plot network
-plot_connectivity_network(dynamics.firms.W)
+plot_connectivity_network(dynamics.firms.supply_network)
 
-V = community.greedy_modularity_communities(nx.from_numpy_array(dynamics.firms.W))
+V = community.greedy_modularity_communities(nx.from_numpy_array(dynamics.firms.supply_network))
 
 # get which was the final round
 final_round = dynamics.r

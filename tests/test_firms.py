@@ -14,7 +14,7 @@ class TestFirms(unittest.TestCase):
         b = np.array([1/6, 1/7])
         z = np.array([1/2, 1/3])
         tau = [1,1]
-        T = None
+        T = np.ones((2,2))
 
         # type caste everything to floats
         a = a.astype(float)
@@ -46,7 +46,7 @@ class TestFirms(unittest.TestCase):
         b = np.array([0.7, 0.8, 0.9,0.7,0.5])
         z = np.array([2,3,5,1,1])
         tau = [1,1,1,1,1]
-        T = None
+        T = np.ones((5,5))
 
         # type caste everything to floats
         a = a.astype(float)
@@ -126,11 +126,11 @@ class TestFirms(unittest.TestCase):
             self.assertAlmostEqual(P[i], P_computed[i], places=3)
         
         # self.P, self.p, self.x, self.l, self.h
-        firms_P = firms.P
-        firms_p = firms.p
-        firms_x = firms.x
-        firms_l = firms.l
-        firms_h = firms.h
+        firms_P = firms.profits
+        firms_p = firms.prices
+        firms_x = firms.sales
+        firms_l = firms.labour_hired
+        firms_h = firms.wage
 
         for i in range(5):
             self.assertAlmostEqual(P[i], firms_P[i], places=3)
@@ -154,7 +154,7 @@ class TestFirms(unittest.TestCase):
         b = np.array([0.7, 0.8, 0.9,0.7,0.5])
         z = np.array([2,3,5,1,1])
         tau = [1,1,1,1,1]
-        T = None
+        T = np.ones((5,5))
 
         # type caste everything to floats
         a = a.astype(float)
@@ -171,7 +171,7 @@ class TestFirms(unittest.TestCase):
                             [0.6, 0.2, 0.2, 0, 0],
                             [0.3, 0, 0, 0.7, 0]])
 
-        firms.W = W
+        firms.supply_network = W
 
         indices_known = [0,1,3,4]
         indices_known_computed = firms.compute_indices_known(0, firms.tau[0])

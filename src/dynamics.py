@@ -1,5 +1,5 @@
 # network-economy is a simulation program for the Network Economy ABM
-# Copyright (C) 2020 Théo Dessertaine and Mitja Devetak
+# Copyright (C) 2020 Mitja Devetak
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -75,12 +75,12 @@ class Dynamics:
         # append the 'do nothing' case
         possible_rewirings.append([i, i, 0])
         for j in range(self.n_firms):
-            if self.firms.W[j, i] != 0:
+            if self.firms.supply_network[j, i] != 0:
                 # find all the firms that could be wired to i
                 # but are not already wired to i from the technology matrix
                 for k in range(self.n_firms):
-                    if self.firms.T[k, i] != 0 and self.firms.W[k, i] == 0:
-                        possible_rewirings.append([j, k, self.firms.T[k, i]])
+                    if self.firms.technology_network[k, i] != 0 and self.firms.supply_network[k, i] == 0:
+                        possible_rewirings.append([j, k, self.firms.technology_network[k, i]])
 
         return possible_rewirings
 
@@ -104,16 +104,16 @@ class Dynamics:
 
             # compute possible rewirings
             possible_rewirings = self.compute_possible_rewirings(i)
-            current_profit = self.firms.P[i]
+            current_profit = self.firms.profits[i]
             current_rewiring = [i, i, 0]
-            current_connectivity_matrix = self.firms.W.copy()
+            current_connectivity_matrix = self.firms.supply_network.copy()
 
             # loop over possible rewirings
             for rewiring in possible_rewirings[1:]:
                 old_supplier = rewiring[0]
                 new_supplier = rewiring[1]
                 capacity_new_supplier = rewiring[2]
-                capacity_old_supplier = self.firms.W[old_supplier, i]
+                capacity_old_supplier = self.firms.supply_network[old_supplier, i]
                 # change the network matrix
                 current_connectivity_matrix[old_supplier, i] = 0
                 current_connectivity_matrix[new_supplier,
@@ -134,19 +134,19 @@ class Dynamics:
                 current_connectivity_matrix[new_supplier, i] = 0
 
             # update the network matrix
-            self.firms.W[current_rewiring[0], i] = 0
-            self.firms.W[current_rewiring[1], i] = current_rewiring[2]
+            self.firms.supply_network[current_rewiring[0], i] = 0
+            self.firms.supply_network[current_rewiring[1], i] = current_rewiring[2]
 
             # update the firms economy
             self.firms.update_equilibrium()
 
             # update the time series
             current_position = self.current_round * self.n_firms + self.current_time
-            self.profits_series[current_position, :] = self.firms.P
-            self.p_series[current_position, :] = self.firms.p
-            self.x_series[current_position, :] = self.firms.x
-            self.l_series[current_position, :] = self.firms.l
-            self.h_series[current_position, :] = self.firms.h
+            self.profits_series[current_position, :] = self.firms.profits
+            self.p_series[current_position, :] = self.firms.prices
+            self.x_series[current_position, :] = self.firms.sales
+            self.l_series[current_position, :] = self.firms.labour_hired
+            self.h_series[current_position, :] = self.firms.wage
             self.household_utility[current_position,
                                    :] = self.firms.compute_household_utility()
             self.trophic_incoherence_series[current_position,

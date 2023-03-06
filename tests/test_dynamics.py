@@ -56,12 +56,12 @@ class TestDynamics(unittest.TestCase):
         # check that the matrix W is unchanged
         for i in range(W.shape[0]):
             for j in range(W.shape[1]):
-                self.assertAlmostEqual(W[i,j], firms.W[i,j])
+                self.assertAlmostEqual(W[i,j], firms.supply_network[i,j])
             
         # check that the matrix T is unchanged
         for i in range(T.shape[0]):
             for j in range(T.shape[1]):
-                self.assertAlmostEqual(T[i,j], firms.T[i,j])
+                self.assertAlmostEqual(T[i,j], firms.technology_network[i,j])
 
     def test_2_compute_round(self):
 
@@ -93,8 +93,8 @@ class TestDynamics(unittest.TestCase):
 
         # compute one round
         flag_computed = dynamics.compute_round()
-        W_compute = dynamics.firms.W
-        P_compute = dynamics.firms.P
+        W_compute = dynamics.firms.supply_network
+        P_compute = dynamics.firms.profits
 
         # check that the expected W is equal to the computed W
         self.assertEqual(flag_computed, flag_expected)
@@ -107,7 +107,7 @@ class TestDynamics(unittest.TestCase):
         # check that the matrix T is unchanged
         for i in range(T.shape[0]):
             for j in range(T.shape[1]):
-                self.assertAlmostEqual(T[i,j], firms.T[i,j])
+                self.assertAlmostEqual(T[i,j], firms.technology_network[i,j])
     
 if __name__ == '__main__':
     unittest.TestLoader.sortTestMethodsUsing = None

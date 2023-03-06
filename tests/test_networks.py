@@ -167,6 +167,33 @@ class TestNetwork(unittest.TestCase):
         mutual_information_computed_2 = mutual_information_of_two_partitions(V, U)
         self.assertAlmostEqual(mutual_information_expected, mutual_information_computed_2,3)
 
+    def test_is_subset(self):
+
+        network_1 = np.array([[0, 1, 1, 0],
+                                [1, 0, 0, 0],
+                                [1, 0, 0, 0],
+                                [0, 0, 0, 0]])
+        network_2 = np.array([[0, 1, 1, 0],
+                                [1, 0, 0, 0],
+                                [1, 1, 0, 0],
+                                [0, 1, 0, 1]])
+        
+        self.assertTrue(is_subset(network_1, network_2))
+        self.assertFalse(is_subset(network_2, network_1))
+    
+    def test_is_superset(self):
+
+        network_1 = np.array([[0, 1, 1, 0],
+                                [1, 0, 0, 0],
+                                [1, 0, 0, 0],
+                                [0, 0, 0, 0]])
+        network_2 = np.array([[0, 1, 1, 0],
+                                [1, 0, 0, 0],
+                                [1, 1, 0, 0],
+                                [0, 1, 0, 1]])
+        
+        self.assertFalse(is_superset(network_1, network_2))
+        self.assertTrue(is_superset(network_2, network_1))
 
 if __name__ == '__main__':
     unittest.TestLoader.sortTestMethodsUsing = None

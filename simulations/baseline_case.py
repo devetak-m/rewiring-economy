@@ -38,7 +38,7 @@ dynamics = Dynamics(firms, n_periods)
 dynamics.compute_dynamics()
 
 # plot network
-plot_connectivity_network(dynamics.firms.W)
+plot_connectivity_network(dynamics.firms.supply_network)
 
 # get which was the final round
 final_round = dynamics.r

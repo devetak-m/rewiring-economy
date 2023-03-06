@@ -1,10 +1,32 @@
+# network-economy is a simulation program for the Network Economy ABM
+# Copyright (C) 2020 Mitja Devetak
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+"""
+The ``firms`` module
+======================
+
+This module contains the class that implements the firms of the network economy.
+"""
 import numpy as np
 import network as net
 
 
 class Firms():
-
-    def __init__(self, a, z, b, tau, W, T):
+    """ Class that implements the firms of the network economy. """
+    def __init__(self, a, z, b, tau, supply_network, technology_network):
 
         # a : labor intensity vector
         # z : productivity vector
@@ -16,18 +38,18 @@ class Firms():
         self.z = z
         self.b = b 
         self.tau = tau
-        self.W = W
-        self.T = T
+        self.supply_network = supply_network
+        self.technology_network = technology_network
 
         # store equilibrium values
-        self.P = None
-        self.p = None
-        self.x = None
-        self.l = None
-        self.h = None
+        self.profits = None
+        self.prices = None
+        self.sales = None
+        self.labour_hired = None
+        self.wage = None
 
         # compute equilibrium values
-        self.P, self.p, self.x, self.l, self.h = self.compute_equilibrium()       
+        self.profits, self.prices, self.sales, self.labour_hired, self.wage = self.compute_equilibrium()       
     
     # Setters for class instances
 
@@ -43,29 +65,34 @@ class Firms():
     def update_tau(self, tau):
         self.tau = tau
     
-    def update_W(self, W):
-        self.W = W
+    def update_supply_network(self, new_supply_network):
+        # check that the new supply network is a subset of the technology network
+        if not net.is_subset(new_supply_network, self.technology_network):
+            raise ValueError("New supply network is not a subset of the current technology network.")
+        self.supply_network = new_supply_network
+        # update equilibrium values
+        self.update_equilibrium()
     
-    def update_T(self, T):
-        self.T = T
+    def update_technology_network(self, new_technology_network):
+        # check that the new technology network is a superset of the supply network
+        if not net.is_superset(new_technology_network, self.supply_network):
+            raise ValueError("New technology network is not a superset of the current supply network.")
+        self.technology_network = new_technology_network
 
-    def update_P(self, P):
-        self.P = P
+    def update_a(self, a):
+        self.a = a
     
-    def update_p(self, p):
-        self.p = p
+    def update_z(self, z):
+        self.z = z
+
+    def update_b(self, b):
+        self.b = b
     
-    def update_x(self, x):
-        self.x = x
-    
-    def update_l(self, l):
-        self.l = l
-    
-    def update_h(self, h):
-        self.h = h
+    def update_tau(self, tau):
+        self.tau = tau
     
     def update_equilibrium(self):
-        self.P, self.p, self.x, self.l, self.h = self.compute_equilibrium()
+        self.profits, self.prices, self.sales, self.labour_hired, self.wage = self.compute_equilibrium()
     # Compute profits at equilibrium
     def compute_equilibrium(self):
         # compute W_tilde matrix
@@ -95,45 +122,45 @@ class Firms():
     # Compute W_tilde matrix
     # (W_tilde)ij = (1 − a_j)b_j w_ij
     def compute_W_tilde(self):
-        W_tilde = np.zeros(self.W.shape)
-        for i in range(self.W.shape[0]):
-            for j in range(self.W.shape[1]):
-                W_tilde[i, j] = (1 - self.a[j]) * self.b[j] * self.W[i, j]
+        W_tilde = (1 - self.a) * self.b * self.supply_network
         return W_tilde
     
     # Solve for V
     # V = (I − W_tilde)^(-1) * (1/n)
     def compute_V(self, W_tilde):
         V = np.linalg.inv(np.eye(W_tilde.shape[0]) - W_tilde) @ (np.ones(W_tilde.shape[0]))
-
         V = V / V.shape[0]
         return V
     
     # Compute wage h
     # h = sum_j (1 - a_j) * b_j * V_j * 1/n
     def compute_h(self, V):
-        h = 0
-        for j in range(V.shape[0]):
-            h += (1 - self.a[j]) * self.b[j] * V[j]
+        # h = 0
+        # for j in range(V.shape[0]):
+        #     h += (1 - self.a[j]) * self.b[j] * V[j]
+        h = np.sum((1 - self.a) * self.b * V)
         return h/V.shape[0]
     
     # Compute constant for log prices
     # C_i = log(z_i^(-1) * b_i^(-b_i) * v_i^(1 - bi) * h^(a_ib_i))
     def compute_C(self, V, h):
-        C = np.zeros(V.shape[0])
-        for i in range(V.shape[0]):
-            C[i] = np.log(self.z[i]**(-1) * self.b[i] ** (-self.b[i]) * V[i]**(1 - self.b[i]) * h**(self.a[i] * self.b[i]))
+        # C = np.zeros(V.shape[0])
+        # for i in range(V.shape[0]):
+        #     C[i] = np.log(self.z[i]**(-1) * self.b[i] ** (-self.b[i]) * V[i]**(1 - self.b[i]) * h**(self.a[i] * self.b[i]))
+        C = np.log(self.z**(-1) * self.b ** (-self.b) * V**(1 - self.b) * h**(self.a * self.b))
         return C
     
     # Compute W_prime matrix
     # W_prime(i,j) = (1 - a(i)) * b(i) * W(j,i)        
     # W_prime_ij = (1 - a_i) * W_ji * b_i
     def compute_W_prime(self):
-        W_prime = np.zeros(self.W.shape)
-        for i in range(self.W.shape[0]):
-            for j in range(self.W.shape[1]):
-                W_prime[i, j] = (1 - self.a[i]) * self.W[j, i] * self.b[i]
-        return W_prime
+        # W_prime = np.zeros(self.supply_network.shape)
+        # for i in range(self.supply_network.shape[0]):
+        #     for j in range(self.supply_network.shape[1]):
+        #         W_prime[i, j] = (1 - self.a[i]) * self.supply_network[j, i] * self.b[i]
+
+        W_prime = (1 - self.a) * self.supply_network * self.b
+        return W_prime.T
 
     # Compute log prices
     # lp = (I - W_prime)^(-1) * C
@@ -147,25 +174,28 @@ class Firms():
     # Compute production quantities
     # x_i = V_i/p_i
     def compute_x(self, V, p):
-        x = np.zeros(V.shape[0])
-        for i in range(V.shape[0]):
-            x[i] = V[i] / p[i]
+        # x = np.zeros(V.shape[0])
+        # for i in range(V.shape[0]):
+        #     x[i] = V[i] / p[i]
+        x = V / p
         return x
     # Compute ammount of hired labor
     # l_i = a_i * b_i * p_i * x_i / h
     def compute_l(self, x, p, h):
-        l = np.zeros(x.shape[0])
-        for i in range(x.shape[0]):
-            l[i] = self.a[i] * self.b[i] * p[i] * x[i] / h
+        # l = np.zeros(x.shape[0])
+        # for i in range(x.shape[0]):
+        #     l[i] = self.a[i] * self.b[i] * p[i] * x[i] / h
+        l = self.a * self.b * p * x / h
         return l
     
     # Compute g
     # g_ji = (1 - a_i) * W_ji * b_i * p_i * x_i / p_j
     def compute_g(self, p, x):
-        g = np.zeros(self.W.shape)
-        for i in range(p.shape[0]):
-            for j in range(p.shape[0]):
-                g[j, i] = (1 - self.a[i]) * self.W[j, i] * self.b[i] * p[i] * x[i] / p[j]
+        # g = np.zeros(self.supply_network.shape)
+        # for i in range(p.shape[0]):
+        #     for j in range(p.shape[0]):
+        #         g[j, i] = (1 - self.a[i]) * self.supply_network[j, i] * self.b[i] * p[i] * x[i] / p[j]
+        g = (1 - self.a) * self.supply_network * self.b * p * x / p[:, None]
         return g
 
     # Compute profits
@@ -187,18 +217,18 @@ class Firms():
         if tau_i == -1:
             # compute profits with W = W'
             # store current W
-            W = self.W
+            W = self.supply_network
             # update W
-            self.update_W(W_new)
+            self.update_supply_network(W_new)
             # compute profits
-            P, p, x, l, h  = self.compute_equilibrium()
+            new_profits = self.profits
             # W = W again
-            self.update_W(W)
-            return P[i]
+            self.update_supply_network(W)
+            return new_profits[i]
         
         else:
             # store current W
-            W = self.W
+            W = self.supply_network
             
             # firm has imperfect foresight
             # compute indices of firms that are known by firm under inspection
@@ -206,7 +236,7 @@ class Firms():
             # compute indices of firms that are not known by firm under inspection
             indices_unknown = self.compute_indices_unknown(indices_known)
             # update W
-            self.update_W(W_new)
+            self.update_supply_network(W_new)
             # compute expected profits with W = W_new
             K1 = self.compute_K1(indices_known, indices_unknown)
             eW_tilde = self.compute_eW_tilde(indices_known)
@@ -230,7 +260,7 @@ class Firms():
             # compute expected profits
             eP = self.compute_P(eh, ex_all, ep_all, el , eg)
             # W = W again
-            self.update_W(W)
+            self.update_supply_network(W)
             return eP[i]
     
     # compute indices of firms that are known by firm under inspection
@@ -238,14 +268,14 @@ class Firms():
         indices_known = [i]
         if tau == 0:
             return indices_known
-        for j in range(self.W.shape[0]):
-            if (self.W[i, j] > 0 and j != i) or (self.W[j, i] > 0 and j != i):
+        for j in range(self.supply_network.shape[0]):
+            if (self.supply_network[i, j] > 0 and j != i) or (self.supply_network[j, i] > 0 and j != i):
                 indices_known.append(j)
         for k in range(1,tau):
             new_indices = []
             for j in indices_known:
-                for l in range(self.W.shape[0]):
-                    if ((self.W[j, l] > 0 and l != j) or (self.W[l, j] > 0  and l != j)) and (l not in indices_known):
+                for l in range(self.supply_network.shape[0]):
+                    if ((self.supply_network[j, l] > 0 and l != j) or (self.supply_network[l, j] > 0  and l != j)) and (l not in indices_known):
                         new_indices.append(l)
             indices_known += new_indices
         return indices_known
@@ -253,7 +283,7 @@ class Firms():
     # compute indices of firms that are not known by firm under inspection
     def compute_indices_unknown(self, indices_known):
         indices_unknown = []
-        for j in range(self.W.shape[0]):
+        for j in range(self.supply_network.shape[0]):
             if j not in indices_known:
                 indices_unknown.append(j)
         return indices_unknown
@@ -264,7 +294,7 @@ class Firms():
         K1 = np.zeros(len(indices_known))
         for i, k in enumerate(indices_known):
             for j in indices_unknown:
-                K1[i] += (1 - self.a[j]) * self.b[j] * self.W[k, j] * self.p[j] * self.x[j]
+                K1[i] += (1 - self.a[j]) * self.b[j] * self.supply_network[k, j] * self.prices[j] * self.sales[j]
         return K1
     
 
@@ -275,22 +305,22 @@ class Firms():
         eW_tilde = np.zeros((len(indices_known), len(indices_known)))
         for i, k in enumerate(indices_known):
             for j, u in enumerate(indices_known):
-                eW_tilde[i, j] = (1 - self.a[u]) * self.b[u] * self.W[k, u]
+                eW_tilde[i, j] = (1 - self.a[u]) * self.b[u] * self.supply_network[k, u]
         return eW_tilde
 
     # compute expected V for known firms
     # V = (I - eW_tilde)^(-1) * (1/n + K1)
     def compute_eV(self, eW_tilde, K1):
         I = np.eye(len(eW_tilde))
-        n = self.P.shape[0]
+        n = self.profits.shape[0]
         eV = np.linalg.inv(I - eW_tilde) @ (np.ones(len(eW_tilde)) / n + K1)
         return eV
     
     # compute K2 constant for known firms
     # K2 = sum_k a_k * b_k * v_k / h
     def compute_K2(self, indices_known):
-        K2 = np.sum(self.a[indices_known] * self.b[indices_known] * self.p[indices_known] * self.x[indices_known])
-        return K2/self.h    
+        K2 = np.sum(self.a[indices_known] * self.b[indices_known] * self.prices[indices_known] * self.sales[indices_known])
+        return K2/self.wage    
 
     # compute expected wage h
     # eh = (1 / K2) sum_k a_k * b_k eV_k
@@ -306,7 +336,7 @@ class Firms():
         lK3 = np.zeros(len(indices_known))
         for i, k in enumerate(indices_known):
             for j in indices_unknown:
-                lK3[i] += (1 - self.a[k]) * self.b[k] * self.W[j, k] * np.log(self.p[j])
+                lK3[i] += (1 - self.a[k]) * self.b[k] * self.supply_network[j, k] * np.log(self.prices[j])
         return lK3
 
     # compute constant for log prices of known firms
@@ -324,7 +354,7 @@ class Firms():
         eW_prime = np.zeros((len(indices_known), len(indices_known)))
         for i, k in enumerate(indices_known):
             for j, u in enumerate(indices_known):
-                eW_prime[i, j] = (1 - self.a[u]) * self.W[k,u] * self.b[u]
+                eW_prime[i, j] = (1 - self.a[u]) * self.supply_network[k,u] * self.b[u]
         return eW_prime
 
     # compute expected log prices for known firms
@@ -337,29 +367,29 @@ class Firms():
     # compute expected log prices for all firms
     # ep_j = ep_k if j is known and ep_j = p_j if j is unknown
     def compute_ep_all(self, ep, indices_known, indices_unknown):
-        ep_all = np.zeros(self.W.shape[0])
+        ep_all = np.zeros(self.supply_network.shape[0])
         for i, k in enumerate(indices_known):
             ep_all[k] = ep[i]
         for j in indices_unknown:
-            ep_all[j] = self.p[j]
+            ep_all[j] = self.prices[j]
         return ep_all
     
     # compute expected log quantities for all firms
     # eq_j = eq_k if j is known and eq_j = q_j if j is unknown
     def compute_ex_all(self, ex, indices_known, indices_unknown):
-        ex_all = np.zeros(self.W.shape[0])
+        ex_all = np.zeros(self.supply_network.shape[0])
         for i, k in enumerate(indices_known):
             ex_all[k] = ex[i]
         for j in indices_unknown:
-            ex_all[j] = self.x[j]
+            ex_all[j] = self.sales[j]
         return ex_all
     
     def compute_household_utility(self):
         # compute household utility
         # - sum_j log(p_j)
-        return -np.sum(np.log(self.p))
+        return -np.sum(np.log(self.prices))
     
     def compute_trophic_incoherence(self):
-        return net.compute_trophic_incoherence(self.W)
+        return net.compute_trophic_incoherence(self.supply_network)
     
         

@@ -52,7 +52,7 @@ def run_simulation(parameters):
     dynamics.compute_dynamics()
 
     # save a plot of the final network W
-    plot_connectivity_network(dynamics.firms.W, save_location + folder_name + "/final_network.png")
+    plot_connectivity_network(dynamics.firms.supply_network, save_location + folder_name + "/final_network.png")
 
     # save a plot of the household utility
     household_utility = dynamics.household_utility[:dynamics.r * n_firms]

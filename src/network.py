@@ -190,8 +190,23 @@ def mutual_information_of_two_partitions(U,V):
     
     return mutual_information
     
+def is_subset(network_1, network_2):
+    """
+    Checks if network_1 is a subset of network_2.
+    :param network_1: Network 1.
+    :param network_2: Network 2.
+    :return: True if network_1 is a subset of network_2, False otherwise.
+    """
+    return np.all(network_1 <= network_2)
 
-
+def is_superset(network_1, network_2):
+    """
+    Checks if network_1 is a superset of network_2.
+    :param network_1: Network 1.
+    :param network_2: Network 2.
+    :return: True if network_1 is a superset of network_2, False otherwise.
+    """
+    return np.all(network_1 >= network_2)
 
 # def generate_random_technology_matrix(n_firms, c_tot):
 #     """
