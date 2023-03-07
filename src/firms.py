@@ -65,13 +65,14 @@ class Firms():
     def update_tau(self, tau):
         self.tau = tau
     
-    def update_supply_network(self, new_supply_network):
+    def update_supply_network(self, new_supply_network, recalculate_equilibrium=True):
         # check that the new supply network is a subset of the technology network
         if not net.is_subset(new_supply_network, self.technology_network):
             raise ValueError("New supply network is not a subset of the current technology network.")
         self.supply_network = new_supply_network
         # update equilibrium values
-        self.update_equilibrium()
+        if recalculate_equilibrium:
+            self.update_equilibrium()
     
     def update_technology_network(self, new_technology_network):
         # check that the new technology network is a superset of the supply network
@@ -202,10 +203,14 @@ class Firms():
     # P_i = p_i * x_i - l_i * h - sum_j p_j * g_ji
     def compute_P(self, h, x, p, l , g):
         P = np.zeros(p.shape[0])
+        P = p * x - l * h
         for i in range(p.shape[0]):
-            P[i] = p[i] * x[i] - l[i] * h
-            for j in range(p.shape[0]):
-                P[i] -= p[j] * g[j, i]
+            # P[i] = p[i] * x[i] - l[i] * h
+            # for j in range(p.shape[0]):
+            #     P[i] -= p[j] * g[j, i]
+            P[i] -= np.sum(p * g[:, i])
+        # - np.sum(p * g, axis=0)
+        # P -= np.sum(p * g.T, axis= 0)
         return P
     
     # compute expected equilibrium profits for firm i with foresight tau_i and netowrk W'
@@ -218,12 +223,16 @@ class Firms():
             # compute profits with W = W'
             # store current W
             W = self.supply_network
+            # store current state
+            current_profits, current_prices, current_sales, current_labour_hired, current_wage = self.profits, self.prices, self.sales, self.labour_hired, self.wage
             # update W
             self.update_supply_network(W_new)
             # compute profits
             new_profits = self.profits
             # W = W again
-            self.update_supply_network(W)
+            self.update_supply_network(W, recalculate_equilibrium=False)
+            # profits = profits again
+            self.profits, self.prices, self.sales, self.labor, self.wage = current_profits, current_prices, current_sales, current_labour_hired, current_wage
             return new_profits[i]
         
         else:
@@ -236,7 +245,7 @@ class Firms():
             # compute indices of firms that are not known by firm under inspection
             indices_unknown = self.compute_indices_unknown(indices_known)
             # update W
-            self.update_supply_network(W_new)
+            self.update_supply_network(W_new, recalculate_equilibrium=False)
             # compute expected profits with W = W_new
             K1 = self.compute_K1(indices_known, indices_unknown)
             eW_tilde = self.compute_eW_tilde(indices_known)
@@ -260,7 +269,7 @@ class Firms():
             # compute expected profits
             eP = self.compute_P(eh, ex_all, ep_all, el , eg)
             # W = W again
-            self.update_supply_network(W)
+            self.update_supply_network(W, recalculate_equilibrium=False)
             return eP[i]
     
     # compute indices of firms that are known by firm under inspection
@@ -295,6 +304,7 @@ class Firms():
         for i, k in enumerate(indices_known):
             for j in indices_unknown:
                 K1[i] += (1 - self.a[j]) * self.b[j] * self.supply_network[k, j] * self.prices[j] * self.sales[j]
+                    
         return K1
     
 

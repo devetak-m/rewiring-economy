@@ -20,7 +20,7 @@ n_periods = 300
 a = np.ones(n_firms) * 0.5
 b = np.ones(n_firms) * 0.9
 z = np.ones(n_firms)
-tau = np.zeros(n_firms)
+tau = np.ones(n_firms).astype(int)
 
 c = 4
 c_prime = 8
