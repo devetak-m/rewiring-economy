@@ -123,13 +123,13 @@ class Firms():
     # Compute W_tilde matrix
     # (W_tilde)ij = (1 − a_j)b_j w_ij
     def compute_W_tilde(self):
-        W_tilde = (1 - self.a) * self.b * self.supply_network
-        return W_tilde
+        return (1 - self.a) * self.b * self.supply_network
     
     # Solve for V
     # V = (I − W_tilde)^(-1) * (1/n)
     def compute_V(self, W_tilde):
-        V = np.linalg.inv(np.eye(W_tilde.shape[0]) - W_tilde) @ (np.ones(W_tilde.shape[0]))
+        # V = np.linalg.inv(np.eye(W_tilde.shape[0]) - W_tilde) @ (np.ones(W_tilde.shape[0]))
+        V = np.linalg.solve(np.eye(W_tilde.shape[0]) - W_tilde, np.ones(W_tilde.shape[0]))
         V = V / V.shape[0]
         return V
     
@@ -145,28 +145,18 @@ class Firms():
     # Compute constant for log prices
     # C_i = log(z_i^(-1) * b_i^(-b_i) * v_i^(1 - bi) * h^(a_ib_i))
     def compute_C(self, V, h):
-        # C = np.zeros(V.shape[0])
-        # for i in range(V.shape[0]):
-        #     C[i] = np.log(self.z[i]**(-1) * self.b[i] ** (-self.b[i]) * V[i]**(1 - self.b[i]) * h**(self.a[i] * self.b[i]))
-        C = np.log(self.z**(-1) * self.b ** (-self.b) * V**(1 - self.b) * h**(self.a * self.b))
-        return C
+        return np.log(self.z**(-1) * self.b ** (-self.b) * V**(1 - self.b) * h**(self.a * self.b))
     
     # Compute W_prime matrix
     # W_prime(i,j) = (1 - a(i)) * b(i) * W(j,i)        
     # W_prime_ij = (1 - a_i) * W_ji * b_i
     def compute_W_prime(self):
-        # W_prime = np.zeros(self.supply_network.shape)
-        # for i in range(self.supply_network.shape[0]):
-        #     for j in range(self.supply_network.shape[1]):
-        #         W_prime[i, j] = (1 - self.a[i]) * self.supply_network[j, i] * self.b[i]
-
-        W_prime = (1 - self.a) * self.supply_network * self.b
-        return W_prime.T
+        return ((1 - self.a) * self.supply_network * self.b).T
 
     # Compute log prices
     # lp = (I - W_prime)^(-1) * C
     def compute_lp(self, W_prime, C):
-        lp = np.linalg.inv(np.eye(W_prime.shape[0]) - W_prime) @ C
+        lp = np.linalg.solve(np.eye(W_prime.shape[0]) - W_prime, C)
         return lp
 
     def compute_p(self, lp):
@@ -175,27 +165,16 @@ class Firms():
     # Compute production quantities
     # x_i = V_i/p_i
     def compute_x(self, V, p):
-        # x = np.zeros(V.shape[0])
-        # for i in range(V.shape[0]):
-        #     x[i] = V[i] / p[i]
-        x = V / p
-        return x
+        return V / p
     # Compute ammount of hired labor
     # l_i = a_i * b_i * p_i * x_i / h
     def compute_l(self, x, p, h):
-        # l = np.zeros(x.shape[0])
-        # for i in range(x.shape[0]):
-        #     l[i] = self.a[i] * self.b[i] * p[i] * x[i] / h
         l = self.a * self.b * p * x / h
         return l
     
     # Compute g
     # g_ji = (1 - a_i) * W_ji * b_i * p_i * x_i / p_j
     def compute_g(self, p, x):
-        # g = np.zeros(self.supply_network.shape)
-        # for i in range(p.shape[0]):
-        #     for j in range(p.shape[0]):
-        #         g[j, i] = (1 - self.a[i]) * self.supply_network[j, i] * self.b[i] * p[i] * x[i] / p[j]
         g = (1 - self.a) * self.supply_network * self.b * p * x / p[:, None]
         return g
 
@@ -292,22 +271,13 @@ class Firms():
     # compute K1
     # K1_k = sum_{j in J} (1 - a_j) * b_j * W_kj * V_j
     def compute_K1(self, indices_known, indices_unknown):
-        K1 = np.zeros(len(indices_known))
-        for i, k in enumerate(indices_known):
-            for j in indices_unknown:
-                K1[i] += (1 - self.a[j]) * self.b[j] * self.supply_network[k, j] * self.prices[j] * self.sales[j]
-                    
+        K1 = np.sum((1 - self.a[indices_unknown]) * self.b[indices_unknown] * self.supply_network[indices_known, :][:, indices_unknown] * self.prices[indices_unknown] * self.sales[indices_unknown], axis=1)
         return K1
-    
-
 
     # compute W_tilde matrix for known firms
     # (eW_tilde)_ij = (1 - a_j) * b_j * w_ij
     def compute_eW_tilde(self, indices_known):
-        eW_tilde = np.zeros((len(indices_known), len(indices_known)))
-        for i, k in enumerate(indices_known):
-            for j, u in enumerate(indices_known):
-                eW_tilde[i, j] = (1 - self.a[u]) * self.b[u] * self.supply_network[k, u]
+        eW_tilde = (1 - self.a[indices_known]) * self.b[indices_known] * self.supply_network[indices_known, :][:, indices_known]
         return eW_tilde
 
     # compute expected V for known firms
@@ -315,8 +285,7 @@ class Firms():
     def compute_eV(self, eW_tilde, K1):
         I = np.eye(len(eW_tilde))
         n = self.profits.shape[0]
-        eV = np.linalg.inv(I - eW_tilde) @ (np.ones(len(eW_tilde)) / n + K1)
-        return eV
+        return np.linalg.solve(I - eW_tilde, np.ones(len(eW_tilde)) / n + K1)
     
     # compute K2 constant for known firms
     # K2 = sum_k a_k * b_k * v_k / h
@@ -327,44 +296,31 @@ class Firms():
     # compute expected wage h
     # eh = (1 / K2) sum_k a_k * b_k eV_k
     def compute_eh(self, eV, K2, indices_known):
-        eh = 0
-        for i, k in enumerate(indices_known):
-            eh += self.a[k] * self.b[k] * eV[i]
+        eh = np.sum(self.a[indices_known] * self.b[indices_known] * eV)
         return eh / K2
 
     # compute log(K3) constant for known firms
     # lK3_k = sum_j (1 - a_j) * b_j * w_ji * b_i * log(p_j)
     def compute_lK3(self, indices_known, indices_unknown):
-        lK3 = np.zeros(len(indices_known))
-        for i, k in enumerate(indices_known):
-            for j in indices_unknown:
-                lK3[i] += (1 - self.a[k]) * self.b[k] * self.supply_network[j, k] * np.log(self.prices[j])
+        lK3 = np.sum((1 - self.a[indices_known]) * self.b[indices_known] * self.supply_network[indices_unknown, :][:, indices_known] * np.log(self.prices[indices_unknown]).reshape(-1, 1) , axis=0)
         return lK3
 
     # compute constant for log prices of known firms
     # Ce_k = log(z_k^(-1) * b_k^(-bk) * v_k^(1 - bk) * h^(a_kb_k)) + lK3_k  
     def compute_eC(self, eV, eh, lK3, indices_known):
-        eC = np.zeros(len(indices_known))
-        for i, k in enumerate(indices_known):
-            eC[i] = np.log(self.z[k]**(-1) * self.b[k]**(-self.b[k]) * eV[i]**(1 - self.b[k]) * eh**(self.a[k] * self.b[k])) + lK3[i]
+        eC = np.log(self.z[indices_known]**(-1) * self.b[indices_known]**(-self.b[indices_known]) * eV**(1 - self.b[indices_known]) * eh**(self.a[indices_known] * self.b[indices_known])) + lK3
         return eC
 
     # W_prime(i,j) = (1 - a(i)) * b(i) * W(j,i)        
     # W_prime_ij = (1 - a_i) * W_ji * b_i
     # for i and j known
     def compute_eW_prime(self, indices_known):
-        eW_prime = np.zeros((len(indices_known), len(indices_known)))
-        for i, k in enumerate(indices_known):
-            for j, u in enumerate(indices_known):
-                eW_prime[i, j] = (1 - self.a[u]) * self.supply_network[k,u] * self.b[u]
-        return eW_prime
+        return (1 - self.a[indices_known]) * self.supply_network[indices_known, :][:, indices_known] * self.b[indices_known]
 
     # compute expected log prices for known firms
     # lp = (1 - W_tilde)^(-1) * Ce
     def compute_elp(self, eW_prime, eC):
-        I = np.eye(len(eW_prime))
-        elp = np.linalg.inv(I - eW_prime) @ eC
-        return elp
+        return np.linalg.solve(np.eye(len(eW_prime)) - eW_prime, eC)
     
     # compute expected log prices for all firms
     # ep_j = ep_k if j is known and ep_j = p_j if j is unknown
@@ -386,12 +342,11 @@ class Firms():
             ex_all[j] = self.sales[j]
         return ex_all
     
+    # compute household utility
+    # - sum_j log(p_j)
     def compute_household_utility(self):
-        # compute household utility
-        # - sum_j log(p_j)
         return -np.sum(np.log(self.prices))
     
     def compute_trophic_incoherence(self):
         return net.compute_trophic_incoherence(self.supply_network)
     
-        
