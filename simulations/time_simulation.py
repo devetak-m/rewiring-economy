@@ -1,12 +1,13 @@
 import cProfile, pstats, io
 from pstats import SortKey
 import pandas as pd
+import numpy as np
 import sys
 sys.path.append('../src')
 from firms import Firms
 from dynamics import Dynamics
 from network import *
-import numpy as np
+
 
 pr = cProfile.Profile()
 pr.enable()

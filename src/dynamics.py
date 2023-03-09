@@ -56,8 +56,9 @@ class Dynamics:
         self.l_series = np.zeros((self.rmax * self.n_firms, self.n_firms))
         self.h_series = np.zeros((self.rmax * self.n_firms, 1))
         self.household_utility = np.zeros((self.rmax * self.n_firms, 1))
-        self.trophic_incoherence_series = np.zeros(
-            (self.rmax * self.n_firms, 1))
+        self.trophic_incoherence_series = np.zeros((self.rmax * self.n_firms, 1))
+
+        self.supply_network_series = np.zeros((self.rmax, self.n_firms*(self.n_firms-1)))
 
         # initialize observables
         self.rewiring_occourences_series = - \
@@ -154,10 +155,17 @@ class Dynamics:
 
             # update the time
             self.current_time += 1
-
+        
+        
+        time_series_network = self.firms.supply_network.copy()
+        # remove diagonal
+        time_series_network = time_series_network[~np.eye(time_series_network.shape[0],dtype=bool)].reshape(time_series_network.shape[0],-1)    
+        self.supply_network_series[self.current_round, :] = time_series_network.flatten()
+      
         # update the round
         self.current_round += 1
 
+      
         return network_changed
 
     def compute_dynamics(self):
