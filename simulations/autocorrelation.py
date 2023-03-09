@@ -11,10 +11,10 @@ import matplotlib.pyplot as plt
 np.random.seed(33)
 
 # set up firms
-n_firms = 30
-n_periods = 100
+n_firms = 10
+n_periods = 300
 a = np.ones(n_firms) * 0.5
-b = np.ones(n_firms) * 0.9
+b = np.ones(n_firms) * 1.6
 z = np.ones(n_firms)
 tau = - np.ones(n_firms)
 
@@ -38,7 +38,12 @@ dynamics.compute_dynamics()
 
 # get which was the final round
 final_round = dynamics.current_round
+
 print(f"Final round: {final_round}")
+if final_round == n_periods:
+    print("Warning: simulation did not converge")
+else:
+    print("Simulation converged")
 
 # compute number of rewirings
 rewiring_series = dynamics.rewiring_occourences_series[:final_round * n_firms]
@@ -63,7 +68,7 @@ supply_network_series = supply_network_series[indices]
 supply_network_series[supply_network_series != 0] = 1
 
 # compute autocorrelation
-nlags = 10
+nlags = 1
 autocorrelation = np.zeros((len(supply_network_series), nlags+1))
 for i in range(supply_network_series.shape[0]):
    autocorrelation[i,:] = sm.tsa.stattools.acf(supply_network_series[i, :], nlags=nlags)
@@ -73,5 +78,10 @@ autocorrelation = autocorrelation[~np.isnan(autocorrelation).any(axis=1)]
 
 # compute mean autocorrelation
 autocorrelation = np.mean(autocorrelation, axis=0)
-print(f"Autocorrelation: {autocorrelation}")
-
+x = np.arange(0, nlags+1, 1)
+plt.plot(x, autocorrelation)
+plt.xlabel("Regression lag")
+plt.ylabel("Autocorrelation")
+# add a horizontal line at y=0
+plt.axhline(y=0, color='k')
+plt.show()  

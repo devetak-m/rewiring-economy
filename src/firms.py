@@ -202,15 +202,7 @@ class Firms():
     # Compute profits
     # P_i = p_i * x_i - l_i * h - sum_j p_j * g_ji
     def compute_P(self, h, x, p, l , g):
-        P = np.zeros(p.shape[0])
-        P = p * x - l * h
-        for i in range(p.shape[0]):
-            # P[i] = p[i] * x[i] - l[i] * h
-            # for j in range(p.shape[0]):
-            #     P[i] -= p[j] * g[j, i]
-            P[i] -= np.sum(p * g[:, i])
-        # - np.sum(p * g, axis=0)
-        # P -= np.sum(p * g.T, axis= 0)
+        P = p * x - l * h - g.T @ p
         return P
     
     # compute expected equilibrium profits for firm i with foresight tau_i and netowrk W'

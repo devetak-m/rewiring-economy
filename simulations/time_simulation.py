@@ -16,7 +16,7 @@ pr.enable()
 np.random.seed(33)
 
 # set up firms
-n_firms = 30
+n_firms = 50
 n_periods = 300
 a = np.ones(n_firms) * 0.5
 b = np.ones(n_firms) * 0.9
