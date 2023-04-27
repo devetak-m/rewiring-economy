@@ -1,5 +1,6 @@
 import sys
-sys.path.append('../src')
+
+sys.path.append("../src")
 from firms import Firms
 from dynamics import Dynamics
 from network import *
@@ -20,7 +21,7 @@ c = 1
 c_prime = 1
 
 # generaet technology matrix
-T = generate_base_case_tech_matrix(n_firms, c + c_prime, 1/c)
+T = generate_base_case_tech_matrix(n_firms, c + c_prime, 1 / c)
 
 # generate connectivity matrix
 W = generate_connectivity_matrix(T, c)
@@ -44,12 +45,12 @@ plot_connectivity_network(dynamics.firms.supply_network)
 final_round = dynamics.r
 
 # plot the evolution of household utility
-household_utility = dynamics.household_utility[:final_round * n_firms]
+household_utility = dynamics.household_utility[: final_round * n_firms]
 plt.plot(household_utility)
 plt.show()
 
 # rewiring series
-rewiring_series = dynamics.rewiring_occourences_series[:final_round * n_firms]
+rewiring_series = dynamics.rewiring_occourences_series[: final_round * n_firms]
 
 # count the elements that are not -1
 n_rewirings = np.count_nonzero(rewiring_series != -1)

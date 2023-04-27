@@ -2,7 +2,8 @@ from joblib import Parallel, delayed
 import numpy as np
 import os
 import sys
-sys.path.append('../src')
+
+sys.path.append("../src")
 import matplotlib.pyplot as plt
 from firms import Firms
 from dynamics import Dynamics
@@ -16,7 +17,7 @@ def run_simulation(parameters):
     folder_name = f"n_firms_{parameters[0]}_n_supplier_{parameters[1]}_n_potential_supplier_{parameters[2]}_tau_{parameters[3]}_stiffness_{parameters[4]}"
     # Path
     path = os.path.join(save_location, folder_name)
-    # create the folder    
+    # create the folder
     os.mkdir(path)
     # fix random seed of numpy
     np.random.seed(33)
@@ -34,9 +35,8 @@ def run_simulation(parameters):
     tau = np.ones(n_firms) * tau
     # typecase tau to int
     tau = tau.astype(int)
-    
 
-    T = generate_base_case_tech_matrix(n_firms, n_supplier + n_potential_supplier, 1/n_supplier)
+    T = generate_base_case_tech_matrix(n_firms, n_supplier + n_potential_supplier, 1 / n_supplier)
     W = generate_connectivity_matrix(T, n_supplier)
 
     # save a plot of the initial network W
@@ -46,7 +46,7 @@ def run_simulation(parameters):
     firms = Firms(a, z, b, tau, W, T)
 
     # set up dynamics
-    dynamics = Dynamics(firms, 200, stiffness = stiffness)
+    dynamics = Dynamics(firms, 200, stiffness=stiffness)
 
     # run simulation
     dynamics.compute_dynamics()
@@ -55,7 +55,7 @@ def run_simulation(parameters):
     plot_connectivity_network(dynamics.firms.supply_network, save_location + folder_name + "/final_network.png")
 
     # save a plot of the household utility
-    household_utility = dynamics.household_utility[:dynamics.r * n_firms]
+    household_utility = dynamics.household_utility[: dynamics.r * n_firms]
     plt.plot(household_utility)
     plt.xlabel("Round")
     plt.ylabel("Household utility")
@@ -63,14 +63,14 @@ def run_simulation(parameters):
     plt.close()
 
     # save a plot of the trophic incoherence
-    trophic_level = dynamics.trophic_incoherence_series[:dynamics.r * n_firms]
+    trophic_level = dynamics.trophic_incoherence_series[: dynamics.r * n_firms]
     plt.plot(trophic_level)
     plt.xlabel("Round")
     plt.ylabel("Trophic level")
     plt.savefig(save_location + folder_name + "/trophic_level.png")
 
     # save the rewiring series
-    rewiring_series = dynamics.rewiring_occourences_series[:dynamics.r * n_firms]
+    rewiring_series = dynamics.rewiring_occourences_series[: dynamics.r * n_firms]
     np.save(save_location + folder_name + "/rewiring_series.npy", rewiring_series)
 
     # compute the total number of rewirings
@@ -83,9 +83,9 @@ def run_simulation(parameters):
         f.write(f"Final trophic level: {trophic_level[-1]}\n")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # Define the parameters
-    
+
     # network sizes
     n_firms = [10, 50, 100, 200]
     # number of suppliers
@@ -119,6 +119,6 @@ if __name__ == '__main__':
 
     # run the simulations
     Parallel(n_jobs=12)(delayed(run_simulation)(pameters) for pameters in all_parameters)
-    
+
     # for parameters in all_parameters:
     #     run_simulation(parameters)

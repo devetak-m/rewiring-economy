@@ -24,9 +24,10 @@ import networkx as nx
 import matplotlib.pyplot as plt
 import numpy as np
 
+
 def generate_base_case_tech_matrix(n_firms, c_tot, value=1):
     """
-    Generates a base case technology matrix according to the parameters c_tot -> number 
+    Generates a base case technology matrix according to the parameters c_tot -> number
     of nonzero entries of each row and each row sums to 1 and diagonal is 0.
     :param n_firms: number of firms,
     :param c_tot: number of nonzero entries of each column and each row
@@ -35,19 +36,20 @@ def generate_base_case_tech_matrix(n_firms, c_tot, value=1):
     """
     technology_matrix = np.zeros((n_firms, n_firms))
     for i in range(n_firms):
-        ind = np.random.choice(np.arange(0, n_firms-1), c_tot, replace=False)
+        ind = np.random.choice(np.arange(0, n_firms - 1), c_tot, replace=False)
         for j in ind:
             if j < i:
                 technology_matrix[j, i] = value
             else:
-                technology_matrix[j+1, i] = value
+                technology_matrix[j + 1, i] = value
 
     return technology_matrix
+
 
 def generate_connectivity_matrix(technology_matrix, connectivity_parameter):
     """''''
     Generates a connectivity matrix from a technology matrix T and a connectivity parameter c.
-    Randomly selects c non-zero elements of each column as the non-zero elements 
+    Randomly selects c non-zero elements of each column as the non-zero elements
     of the corresponding column of W.
     :param technology_matrix: Technology matrix.
     :param connectivity_parameter: Connectivity parameter.
@@ -59,6 +61,7 @@ def generate_connectivity_matrix(technology_matrix, connectivity_parameter):
         W[ind, j] = technology_matrix[ind, j]
     return W
 
+
 def plot_connectivity_network(W, save_path=None):
     """
     Plots the network of connectivity matrix W.
@@ -69,7 +72,7 @@ def plot_connectivity_network(W, save_path=None):
     for i in range(W.shape[0]):
         for j in range(W.shape[1]):
             if W[i, j] != 0:
-                G.add_edge(i,j)
+                G.add_edge(i, j)
     nx.draw(G, with_labels=True)
     plt.draw()
     if save_path is not None:
@@ -87,17 +90,20 @@ def compute_out_weight(W):
     w_out = np.sum(W, axis=1)
     return w_out
 
+
 # given a connectivity matrix W compute the in weight of each node
 # (w_in)_i = sum_j W_ji
 def compute_in_weight(W):
     w_in = np.sum(W, axis=0)
     return w_in
 
+
 # given a connectivity matrix W compute the total weight of each node compute the graph laplacian defined as:
 # L = diag(total_weight) - W - W^T
 def compute_laplacian(W, total_weight):
     L = np.diag(total_weight) - W - W.T
     return L
+
 
 # given a graph laplacian L and the imbalance of each node
 # compute the least squares solution of the linear system Lx = imbalance
@@ -106,6 +112,7 @@ def compute_trophic_level(laplacian, imbalance):
     x = np.linalg.lstsq(laplacian, imbalance, rcond=None)[0]
     x = x - np.min(x)
     return x
+
 
 # given a connectivity matrix W and the trophic level of each node
 # compute the trophic incoherence defined as:
@@ -120,6 +127,7 @@ def compute_trophic_incoherence_from_level(W, trophic_level):
     trophic_incoherence = trophic_incoherence / np.sum(W)
     return trophic_incoherence
 
+
 # given a connectivity matrix W compute trophic incoherence
 def compute_trophic_incoherence(W):
     in_weight = compute_in_weight(W)
@@ -131,6 +139,7 @@ def compute_trophic_incoherence(W):
     trophic_incoherence = compute_trophic_incoherence_from_level(W, trophic_level)
     return trophic_incoherence
 
+
 def generate_communities_supply(n_firms, n_communities, c):
     """
     Generates a connectivity matrix with communities.
@@ -141,8 +150,8 @@ def generate_communities_supply(n_firms, n_communities, c):
     """
 
     if n_firms % n_communities != 0:
-        raise ValueError('n_firms must be a multiple of n_communities')
-    
+        raise ValueError("n_firms must be a multiple of n_communities")
+
     firms_per_community = n_firms // n_communities
 
     W = np.zeros((n_firms, n_firms))
@@ -150,13 +159,23 @@ def generate_communities_supply(n_firms, n_communities, c):
 
     for i in range(n_communities):
         for j in range(n_communities):
-            T[i * firms_per_community:(i + 1) * firms_per_community, j * firms_per_community:(j + 1) * firms_per_community] = generate_base_case_tech_matrix(firms_per_community, c, 1/c)
-    
+            T[
+                i * firms_per_community : (i + 1) * firms_per_community,
+                j * firms_per_community : (j + 1) * firms_per_community,
+            ] = generate_base_case_tech_matrix(firms_per_community, c, 1 / c)
+
     # generate connectivity matrix where each community is connected only to itself
     for i in range(n_communities):
-        W[i*firms_per_community:(i+1)*firms_per_community, i*firms_per_community:(i+1)*firms_per_community] = T[i*firms_per_community:(i+1)*firms_per_community, i*firms_per_community:(i+1)*firms_per_community]
-    
+        W[
+            i * firms_per_community : (i + 1) * firms_per_community,
+            i * firms_per_community : (i + 1) * firms_per_community,
+        ] = T[
+            i * firms_per_community : (i + 1) * firms_per_community,
+            i * firms_per_community : (i + 1) * firms_per_community,
+        ]
+
     return W, T
+
 
 def _compute_total_elements_in_partition(U):
     """
@@ -169,7 +188,8 @@ def _compute_total_elements_in_partition(U):
         total_elements += len(U[i])
     return total_elements
 
-def mutual_information_of_two_partitions(U,V):
+
+def mutual_information_of_two_partitions(U, V):
     """
     Computes the mutual information between two partitions.
     :param U: Partition 1.
@@ -186,10 +206,11 @@ def mutual_information_of_two_partitions(U,V):
         for j in range(v_lenght):
             P = len(np.intersect1d(U[i], V[j])) / total_elements
             if P != 0:
-                mutual_information += P*np.log(P / ((len(U[i]) / total_elements) * (len(V[j]) / total_elements)))
-    
+                mutual_information += P * np.log(P / ((len(U[i]) / total_elements) * (len(V[j]) / total_elements)))
+
     return mutual_information
-    
+
+
 def is_subset(network_1, network_2):
     """
     Checks if network_1 is a subset of network_2.
@@ -198,6 +219,7 @@ def is_subset(network_1, network_2):
     :return: True if network_1 is a subset of network_2, False otherwise.
     """
     return np.all(network_1 <= network_2)
+
 
 def is_superset(network_1, network_2):
     """
@@ -208,6 +230,7 @@ def is_superset(network_1, network_2):
     """
     return np.all(network_1 >= network_2)
 
+
 # def generate_random_technology_matrix(n_firms, c_tot):
 #     """
 #     Generates a random technology matrix according to the parameters c_tot -> number of nonzero entries of each row and
@@ -215,14 +238,13 @@ def is_superset(network_1, network_2):
 #     :param n_firms: number of firms,
 #     :param c_tot: number of nonzero entries of each row and each row sums to 1 and diagonal is 0.
 #     :return: Technology matrix.
-#     """   
+#     """
 #     T = np.zeros((n_firms, n_firms))
 #     for i in range(n_firms):
 #         ind = np.random.choice(np.arange(0, n_firms), c_tot, replace=False)
 #         ind = ind[ind != i]
 #         T[i, ind] = np.random.dirichlet(np.ones(c_tot), size=1)
 #     return T
-
 
 
 # def undir_rrg(d, n):
@@ -410,4 +432,3 @@ def is_superset(network_1, network_2):
 #         pos.update(pos_subgraph)
 
 #     return pos
-
