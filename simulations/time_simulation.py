@@ -3,7 +3,8 @@ from pstats import SortKey
 import pandas as pd
 import numpy as np
 import sys
-sys.path.append('../src')
+
+sys.path.append("../src")
 from firms import Firms
 from dynamics import Dynamics
 from network import *
@@ -27,7 +28,7 @@ c = 4
 c_prime = 8
 
 # generaet technology matrix
-T = generate_base_case_tech_matrix(n_firms, c + c_prime, 1/c)
+T = generate_base_case_tech_matrix(n_firms, c + c_prime, 1 / c)
 
 # generate connectivity matrix
 W = generate_connectivity_matrix(T, c)

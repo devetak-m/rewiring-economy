@@ -1,54 +1,52 @@
 import unittest
 import numpy as np
 import sys
-sys.path.append('../src')
+
+sys.path.append("../src")
 from network import *
 
 
 class TestNetwork(unittest.TestCase):
-
     def test_1_base_case(self):
-
         n_firms = 10
         c = 1
         c_prime = 1
-        
+
         # generate base_case_tech_matrix
-        T = generate_base_case_tech_matrix(n_firms, c + c_prime, 1/c)
+        T = generate_base_case_tech_matrix(n_firms, c + c_prime, 1 / c)
 
         # check that all diagonals are zero
         for i in range(n_firms):
-            self.assertAlmostEqual(T[i,i], 0)
-        
-        # check that there are exactly c + c_prime nonzero elements in each column
-        for j in range(n_firms):
-            self.assertEqual(np.count_nonzero(T[:,j]), c + c_prime)
-
-        # check that the nonzero elements of each column are 1/c
-        for j in range(n_firms):
-            self.assertAlmostEqual(np.sum(T[:, j]), (c + c_prime)/c, 3)
+            self.assertAlmostEqual(T[i, i], 0)
 
         # check that there are exactly c + c_prime nonzero elements in each column
         for j in range(n_firms):
             self.assertEqual(np.count_nonzero(T[:, j]), c + c_prime)
-        
+
+        # check that the nonzero elements of each column are 1/c
+        for j in range(n_firms):
+            self.assertAlmostEqual(np.sum(T[:, j]), (c + c_prime) / c, 3)
+
+        # check that there are exactly c + c_prime nonzero elements in each column
+        for j in range(n_firms):
+            self.assertEqual(np.count_nonzero(T[:, j]), c + c_prime)
+
         # generate a connectivity matrix from T
         W = generate_connectivity_matrix(T, c)
 
         # check that there are exactly c nonzero elements in each column
         for j in range(n_firms):
             self.assertEqual(np.count_nonzero(W[:, j]), c)
-        
+
         # check that the columns of W sum to 1
         for j in range(n_firms):
             self.assertAlmostEqual(np.sum(W[:, j]), 1)
-        
+
         # check that the diagonal of W is zero
         for j in range(n_firms):
             self.assertAlmostEqual(W[j, j], 0)
-    
-    def test_2_base_case(self):
 
+    def test_2_base_case(self):
         n_firms = 100
         c = 2
         c_prime = 4
@@ -58,11 +56,11 @@ class TestNetwork(unittest.TestCase):
 
         # check that all diagonals are zero
         for i in range(n_firms):
-            self.assertAlmostEqual(T[i,i], 0)
+            self.assertAlmostEqual(T[i, i], 0)
 
         # check that there are exactly c + c_prime nonzero elements in each column
         for j in range(n_firms):
-            self.assertEqual(np.count_nonzero(T[:,j]), c + c_prime)
+            self.assertEqual(np.count_nonzero(T[:, j]), c + c_prime)
 
         # check that there are exactly c + c_prime nonzero elements in each column
         for j in range(n_firms):
@@ -84,12 +82,8 @@ class TestNetwork(unittest.TestCase):
             self.assertAlmostEqual(W[j, j], 0)
 
     def test_3_compute_trophic_level(self):
+        W = np.array([[1, 0, 1, 0], [0, 0.5, 0, 0.5], [1, 0, 0, 0], [1, 0.5, 0, 1]])
 
-        W = np.array([[1, 0, 1, 0],
-                    [0, 0.5, 0, 0.5],
-                    [1,0,0,0],
-                    [1, 0.5, 0, 1]])
-    
         expected_in_weight = np.array([3, 1, 1, 1.5])
         expected_out_weight = np.array([2, 1, 1, 2.5])
         computed_out_weight = compute_out_weight(W)
@@ -97,53 +91,49 @@ class TestNetwork(unittest.TestCase):
         for i in range(4):
             self.assertAlmostEqual(expected_out_weight[i], computed_out_weight[i])
             self.assertAlmostEqual(expected_in_weight[i], computed_in_weight[i])
-    
-        expected_laplacian = np.array([[3, 0, -2, -1],
-                                       [0, 1, 0, -1],
-                                       [-2, 0, 2, 0],
-                                       [-1, -1, 0, 2]])
+
+        expected_laplacian = np.array([[3, 0, -2, -1], [0, 1, 0, -1], [-2, 0, 2, 0], [-1, -1, 0, 2]])
         computed_laplacian = compute_laplacian(W, expected_out_weight + expected_in_weight)
         for i in range(4):
             for j in range(4):
                 self.assertAlmostEqual(expected_laplacian[i, j], computed_laplacian[i, j])
-    
+
         expected_trophic_level = np.array([1, 0, 1, 0])
         computed_trophic_level = compute_trophic_level(expected_laplacian, expected_in_weight - expected_out_weight)
         for i in range(4):
             self.assertAlmostEqual(expected_trophic_level[i], computed_trophic_level[i])
-    
-        expected_trophic_incoherence = 5.5/6.5
+
+        expected_trophic_incoherence = 5.5 / 6.5
         computed_trophic_incoherence = compute_trophic_incoherence_from_level(W, computed_trophic_level)
         self.assertAlmostEqual(expected_trophic_incoherence, computed_trophic_incoherence)
 
-        compute_trophic_incoherence_2  = compute_trophic_incoherence(W)
+        compute_trophic_incoherence_2 = compute_trophic_incoherence(W)
         self.assertAlmostEqual(expected_trophic_incoherence, compute_trophic_incoherence_2)
-    
-    def test_4_communities(self):
 
+    def test_4_communities(self):
         n_firms = 30
         n_communities = 3
         c = 4
         c_prime = 8
-        
-        W,T = generate_communities_supply(n_firms, n_communities, c)
+
+        W, T = generate_communities_supply(n_firms, n_communities, c)
 
         # check that there are exactly c + c_prime nonzero elements in each column of T
         for j in range(n_firms):
             self.assertEqual(np.count_nonzero(T[:, j]), c + c_prime)
-        
+
         # check that there are exactly c nonzero elements in each column of W
         for j in range(n_firms):
             self.assertEqual(np.count_nonzero(W[:, j]), c)
-        
+
         # check that the columns of W sum to 1
         for j in range(n_firms):
             self.assertAlmostEqual(np.sum(W[:, j]), 1)
-        
+
         # check that the diagonal of W is zero
         for j in range(n_firms):
             self.assertAlmostEqual(W[j, j], 0)
-        
+
         # generate a undirected network from W
         G = nx.from_numpy_array(W)
 
@@ -151,50 +141,35 @@ class TestNetwork(unittest.TestCase):
         communities = list(nx.algorithms.community.greedy_modularity_communities(G))
         self.assertEqual(len(communities), n_communities)
 
-
     def test_mutual_information_of_two_partitions(self):
-
-        U = [[1,2,3], [4, 5]]
-        V = [[1, 5], [2,3], [4]]
+        U = [[1, 2, 3], [4, 5]]
+        V = [[1, 5], [2, 3], [4]]
 
         mutual_information_computed = mutual_information_of_two_partitions(U, U)
-        self.assertAlmostEqual(0.673011, mutual_information_computed,3)
+        self.assertAlmostEqual(0.673011, mutual_information_computed, 3)
 
         mutual_information_expected = 0.39575
         mutual_information_computed = mutual_information_of_two_partitions(U, V)
-        self.assertAlmostEqual(mutual_information_expected, mutual_information_computed,3)
+        self.assertAlmostEqual(mutual_information_expected, mutual_information_computed, 3)
 
         mutual_information_computed_2 = mutual_information_of_two_partitions(V, U)
-        self.assertAlmostEqual(mutual_information_expected, mutual_information_computed_2,3)
+        self.assertAlmostEqual(mutual_information_expected, mutual_information_computed_2, 3)
 
     def test_is_subset(self):
+        network_1 = np.array([[0, 1, 1, 0], [1, 0, 0, 0], [1, 0, 0, 0], [0, 0, 0, 0]])
+        network_2 = np.array([[0, 1, 1, 0], [1, 0, 0, 0], [1, 1, 0, 0], [0, 1, 0, 1]])
 
-        network_1 = np.array([[0, 1, 1, 0],
-                                [1, 0, 0, 0],
-                                [1, 0, 0, 0],
-                                [0, 0, 0, 0]])
-        network_2 = np.array([[0, 1, 1, 0],
-                                [1, 0, 0, 0],
-                                [1, 1, 0, 0],
-                                [0, 1, 0, 1]])
-        
         self.assertTrue(is_subset(network_1, network_2))
         self.assertFalse(is_subset(network_2, network_1))
-    
-    def test_is_superset(self):
 
-        network_1 = np.array([[0, 1, 1, 0],
-                                [1, 0, 0, 0],
-                                [1, 0, 0, 0],
-                                [0, 0, 0, 0]])
-        network_2 = np.array([[0, 1, 1, 0],
-                                [1, 0, 0, 0],
-                                [1, 1, 0, 0],
-                                [0, 1, 0, 1]])
-        
+    def test_is_superset(self):
+        network_1 = np.array([[0, 1, 1, 0], [1, 0, 0, 0], [1, 0, 0, 0], [0, 0, 0, 0]])
+        network_2 = np.array([[0, 1, 1, 0], [1, 0, 0, 0], [1, 1, 0, 0], [0, 1, 0, 1]])
+
         self.assertFalse(is_superset(network_1, network_2))
         self.assertTrue(is_superset(network_2, network_1))
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     unittest.TestLoader.sortTestMethodsUsing = None
     unittest.main()

@@ -1,5 +1,6 @@
 import sys
-sys.path.append('../src')
+
+sys.path.append("../src")
 from firms import Firms
 from dynamics import Dynamics
 from network import *
@@ -21,7 +22,7 @@ c = 2
 c_prime = 2
 n_communities = 2
 
-W,T = generate_communities_supply(n_firms, n_communities, c)
+W, T = generate_communities_supply(n_firms, n_communities, c)
 
 # pot connectivity matrix
 plot_connectivity_network(W)
@@ -30,7 +31,7 @@ plot_connectivity_network(W)
 firms = Firms(a, z, b, tau, W, T)
 
 # set up dynamics
-dynamics = Dynamics(firms, n_periods, verbose = True)
+dynamics = Dynamics(firms, n_periods, verbose=True)
 
 # compute the initial community
 U = community.greedy_modularity_communities(nx.from_numpy_array(dynamics.firms.supply_network))
@@ -47,12 +48,12 @@ V = community.greedy_modularity_communities(nx.from_numpy_array(dynamics.firms.s
 final_round = dynamics.r
 
 # plot the evolution of household utility
-household_utility = dynamics.household_utility[:final_round * n_firms]
+household_utility = dynamics.household_utility[: final_round * n_firms]
 plt.plot(household_utility)
 plt.show()
 
 # rewiring series
-rewiring_series = dynamics.rewiring_occourences_series[:final_round * n_firms]
+rewiring_series = dynamics.rewiring_occourences_series[: final_round * n_firms]
 
 # count the elements that are not -1
 n_rewirings = np.count_nonzero(rewiring_series != -1)
